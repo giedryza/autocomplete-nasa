@@ -1,0 +1,67 @@
+/* UTILITIES */
+
+:root {
+    --color-white: #fff;
+
+    --color-grey-light: #f3f3f3;
+    --color-grey-light2: #f8f8f8;
+
+    --color-grey-dark: #e7e7e7;
+    --color-grey-dark2: #898989;
+
+    --color-black: #111;
+    --color-black-light: #313131;
+
+    --color-blue: #7959d1;
+}
+
+*,
+*::before,
+::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: inherit;
+    font-family: inherit;
+}
+
+html {
+    box-sizing: border-box;
+    font-size: 62.5%;
+}
+
+body {
+    font-family: sans-serif;
+    line-height: 1;
+    background: var(--color-grey-light);
+    overflow-y: scroll;
+}
+
+/* SPINNER */
+
+.spinner {
+    height: 3rem;
+    width: 3rem;
+    border-radius: 50%;
+    border-top: 3px solid var(--color-grey-dark2);
+    border-left: 3px solid var(--color-grey-dark2);
+    border-right: 3px solid transparent;
+    animation: spinner 0.75s linear infinite;
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ERROR */
+
+.error {
+    font-size: 1.4rem;
+    font-weight: normal;
+    padding: 1px;
+}
+
+.error::after {
+    content: ' ;(';
+}
