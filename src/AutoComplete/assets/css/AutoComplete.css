@@ -4,6 +4,10 @@ form {
     margin: 2rem auto;
 }
 
+.hide {
+    display: none;
+}
+
 /* ICONS */
 
 .input__icon--main,
@@ -95,10 +99,6 @@ form {
 
 /* SUGGESTIONS */
 
-.hide {
-    display: none;
-}
-
 .input-group ul {
     list-style: none;
     position: absolute;
@@ -145,7 +145,7 @@ form {
     font-size: 1.4rem;
 }
 
-.view-more {
+.input-group .view-more {
     border-top: 1px solid var(--color-grey-dark);
     font-size: 1.4rem;
     font-weight: normal;

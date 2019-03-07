@@ -6,6 +6,7 @@ import { ReactComponent as IconX } from './assets/svg/x.svg';
 import { ReactComponent as IconChevronsDown } from './assets/svg/chevrons-down.svg';
 import Spinner from './Spinner';
 import ErrorMessage from './ErrorMessage';
+import SearchInput from './SearchInput';
 import Suggestion from './Suggestion';
 import SelectedSuggestion from './SelectedSuggestion';
 
@@ -19,8 +20,16 @@ class AutoComplete extends Component {
         error: '',
         cursor: 0,
         minChars: 3,
+        initialMaxSuggestions: 5,
         maxSuggestions: this.initialMaxSuggestions,
-        initialMaxSuggestions: 5
+        meta: {
+            errorDefault: 'Something went wrong',
+            errorNotFound: 'Nothing found',
+            dateFormat: 'lt-LT',
+            dropdownStartingTip: 'Type 3 characters',
+            dropdownMoreText: 'View more',
+            searchInputLabel: "Search NASA's images"
+        }
     };
 
     constructURL = query => {
@@ -34,10 +43,12 @@ class AutoComplete extends Component {
     };
 
     getSuggestions = async query => {
+        const { errorDefault, errorNotFound } = this.state.meta;
+
         try {
             const res = await fetch(this.constructURL(query));
             if (res.status !== 200 && res.status !== 201) {
-                throw new Error('Something went wrong');
+                throw new Error(errorDefault);
             }
 
             const {
@@ -45,7 +56,7 @@ class AutoComplete extends Component {
             } = await res.json();
 
             if (!items.length) {
-                throw new Error('Nothing found');
+                throw new Error(errorNotFound);
             }
 
             return this.setState({ suggestions: items, loading: false, error: '' });
@@ -89,7 +100,9 @@ class AutoComplete extends Component {
         suggestionToSelect.nasaId = nasa_id;
         suggestionToSelect.title = title;
         suggestionToSelect.description = description;
-        suggestionToSelect.date = new Date(date_created).toLocaleDateString('lt-LT');
+        suggestionToSelect.date = new Date(date_created).toLocaleDateString(
+            this.state.meta.dateFormat
+        );
         suggestionToSelect.img = href;
 
         return suggestionToSelect;
@@ -199,18 +212,26 @@ class AutoComplete extends Component {
     };
 
     renderViewMore = () => {
-        const { suggestions, maxSuggestions, searchInput, loading, error } = this.state;
+        const {
+            suggestions,
+            maxSuggestions,
+            searchInput,
+            loading,
+            error,
+            meta: { dropdownStartingTip, dropdownMoreText }
+        } = this.state;
+
         if (loading || error) {
             return;
         }
         if (!suggestions.length && searchInput.length < 3) {
-            return <li>Type 3 characters</li>;
+            return <li>{dropdownStartingTip}</li>;
         }
         if (suggestions.length > maxSuggestions) {
             return (
                 <li onClick={this.handleViewMore} className="view-more">
                     <IconChevronsDown className="input__icon--down" />
-                    <p>View more</p>
+                    <p>{dropdownMoreText}</p>
                 </li>
             );
         }
@@ -230,22 +251,18 @@ class AutoComplete extends Component {
                 <form onSubmit={this.handleSubmit}>
                     <div ref={node => (this.node = node)} className="input-group">
                         <IconSearch className="input__icon--main" />
+
                         {this.state.searchInput && (
                             <IconX onClick={this.resetSuggestions} className="input__icon--reset" />
                         )}
 
-                        <input
-                            autoComplete="off"
-                            spellCheck="false"
-                            required
-                            type="text"
-                            id="movie"
+                        <SearchInput
                             name="searchInput"
+                            label={this.state.meta.searchInputLabel}
                             value={this.state.searchInput}
                             onChange={this.handleInputChange}
                             onKeyDown={this.onKeyDown}
                         />
-                        <label htmlFor="movie">Search NASA's images</label>
 
                         <ul className={this.state.hideAutoComplete ? 'hide' : ''}>
                             {this.renderSuggestions()}
