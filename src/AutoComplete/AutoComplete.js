@@ -80,10 +80,26 @@ class AutoComplete extends Component {
         e.preventDefault();
     };
 
-    selectSuggestion = suggestion => {
+    suggestionToSelect = ({
+        data: [{ nasa_id, title, description, date_created }],
+        links: [{ href }]
+    }) => {
+        const suggestionToSelect = {};
+
+        suggestionToSelect.nasaId = nasa_id;
+        suggestionToSelect.title = title;
+        suggestionToSelect.description = description;
+        suggestionToSelect.date = new Date(date_created).toLocaleDateString('lt-LT');
+        suggestionToSelect.img = href;
+
+        return suggestionToSelect;
+    };
+
+    selectSuggestion = (suggestion, cursor) => {
         this.setState({
             searchInput: suggestion.title,
             selectedSuggestion: suggestion,
+            cursor: cursor,
             hideAutoComplete: true
         });
     };
@@ -93,12 +109,9 @@ class AutoComplete extends Component {
 
         switch (keyCode) {
             case 13:
-                if (!suggestions.length) return this.handleSubmit;
-                this.setState({
-                    searchInput: suggestions[cursor].data[0].title,
-                    suggestions: [],
-                    cursor: 0
-                });
+                if (!suggestions.length) return;
+                const suggestion = this.suggestionToSelect(suggestions[cursor]);
+                this.selectSuggestion(suggestion, cursor);
                 break;
             case 38:
                 if (cursor === 0) return;
@@ -137,26 +150,26 @@ class AutoComplete extends Component {
             suggestions = suggestions.slice(0, maxSuggestions);
         }
 
-        return suggestions.map(
-            ({ data: [{ nasa_id, title, description, date_created }], links: [{ href }] }, i) => (
+        return suggestions.map((suggestion, i) => {
+            const suggestionToSelect = this.suggestionToSelect(suggestion);
+
+            return (
                 <Suggestion
-                    key={nasa_id}
-                    nasaId={nasa_id}
-                    title={title}
-                    description={description}
-                    date={new Date(date_created).toLocaleDateString('lt-LT')}
-                    img={href}
+                    key={suggestionToSelect.nasaId}
+                    suggestion={suggestionToSelect}
+                    cursor={i}
                     selectSuggestion={this.selectSuggestion}
                     className={cursor === i ? 'active' : ''}
                 />
-            )
-        );
+            );
+        });
     };
 
     resetSuggestions = () => {
         this.setState({
             suggestions: [],
             searchInput: '',
+            error: '',
             selectedSuggestion: null,
             maxSuggestions: this.state.initialMaxSuggestions,
             hideAutoComplete: true
@@ -212,7 +225,6 @@ class AutoComplete extends Component {
     };
 
     render() {
-        console.log(this.state.selectedSuggestion);
         return (
             <>
                 <form onSubmit={this.handleSubmit}>
