@@ -32,17 +32,17 @@ class AutoComplete extends Component {
         }
     };
 
-    constructURL = query => {
-        const API = {
+    constructURL = search => {
+        const query = {
             url: 'https://images-api.nasa.gov',
             media_type: 'image'
         };
-        const { url, media_type } = API;
+        const { url, media_type } = query;
 
-        return `${url}/search?media_type=${media_type}&q=${query}`;
+        return `${url}/search?media_type=${media_type}&q=${search}`;
     };
 
-    getSuggestions = async query => {
+    fetchSuggestions = async query => {
         const { errorDefault, errorNotFound } = this.state.meta;
 
         try {
@@ -72,26 +72,26 @@ class AutoComplete extends Component {
                 cursor: 0,
                 maxSuggestions: this.state.initialMaxSuggestions
             },
-            this.handleSuggestions
+            this.loadSuggestions
         );
-    };
-
-    handleSuggestions = () => {
-        let { searchInput, minChars } = this.state;
-        searchInput = searchInput.trim();
-
-        if (searchInput && searchInput.length >= minChars) {
-            this.setState({ loading: true }, () => this.getSuggestions(searchInput));
-        } else {
-            this.setState({ suggestions: [], loading: false, error: '' });
-        }
     };
 
     handleSubmit = e => {
         e.preventDefault();
     };
 
-    suggestionToSelect = ({
+    loadSuggestions = () => {
+        let { searchInput, minChars } = this.state;
+        searchInput = searchInput.trim();
+
+        if (searchInput && searchInput.length >= minChars) {
+            this.setState({ loading: true }, () => this.fetchSuggestions(searchInput));
+        } else {
+            this.setState({ suggestions: [], loading: false, error: '' });
+        }
+    };
+
+    generateSuggestionToSelect = ({
         data: [{ nasa_id, title, description, date_created }],
         links: [{ href }]
     }) => {
@@ -108,7 +108,7 @@ class AutoComplete extends Component {
         return suggestionToSelect;
     };
 
-    selectSuggestion = (suggestion, cursor) => {
+    handleSelectSuggestion = (suggestion, cursor) => {
         this.setState({
             searchInput: suggestion.title,
             selectedSuggestion: suggestion,
@@ -117,14 +117,14 @@ class AutoComplete extends Component {
         });
     };
 
-    onKeyDown = ({ keyCode }) => {
+    handleOnKeyDown = ({ keyCode }) => {
         const { suggestions, cursor, maxSuggestions } = this.state;
 
         switch (keyCode) {
             case 13:
                 if (!suggestions.length) return;
-                const suggestion = this.suggestionToSelect(suggestions[cursor]);
-                this.selectSuggestion(suggestion, cursor);
+                const suggestion = this.generateSuggestionToSelect(suggestions[cursor]);
+                this.handleSelectSuggestion(suggestion, cursor);
                 break;
             case 38:
                 if (cursor === 0) return;
@@ -143,7 +143,7 @@ class AutoComplete extends Component {
         }
     };
 
-    renderSuggestions = () => {
+    renderDropdown = () => {
         let { suggestions, loading, error, cursor, maxSuggestions } = this.state;
 
         if (loading)
@@ -164,14 +164,14 @@ class AutoComplete extends Component {
         }
 
         return suggestions.map((suggestion, i) => {
-            const suggestionToSelect = this.suggestionToSelect(suggestion);
+            const suggestionToSelect = this.generateSuggestionToSelect(suggestion);
 
             return (
                 <Suggestion
                     key={suggestionToSelect.nasaId}
                     suggestion={suggestionToSelect}
                     cursor={i}
-                    selectSuggestion={this.selectSuggestion}
+                    selectSuggestion={this.handleSelectSuggestion}
                     className={cursor === i ? 'active' : ''}
                 />
             );
@@ -190,14 +190,14 @@ class AutoComplete extends Component {
     };
 
     componentDidMount = () => {
-        document.addEventListener('mouseup', this.handleSuggestionsHide);
+        document.addEventListener('mouseup', this.handleDropdownHide);
     };
 
     componentWillUnmount = () => {
-        document.removeEventListener('mouseup', this.handleSuggestionsHide);
+        document.removeEventListener('mouseup', this.handleDropdownHide);
     };
 
-    handleSuggestionsHide = ({ target }) => {
+    handleDropdownHide = ({ target }) => {
         if (this.node.contains(target)) {
             this.setState({ hideAutoComplete: false });
         } else {
@@ -261,11 +261,11 @@ class AutoComplete extends Component {
                             label={this.state.meta.searchInputLabel}
                             value={this.state.searchInput}
                             onChange={this.handleInputChange}
-                            onKeyDown={this.onKeyDown}
+                            onKeyDown={this.handleOnKeyDown}
                         />
 
                         <ul className={this.state.hideAutoComplete ? 'hide' : ''}>
-                            {this.renderSuggestions()}
+                            {this.renderDropdown()}
                             {this.renderViewMore()}
                         </ul>
                     </div>
